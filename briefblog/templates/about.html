@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}О проекте — BriefBlog{% endblock %}
+
+{% block extra_style %}
+<style>
+    .about-container {
+        max-width: 700px;
+        margin: 40px auto;
+        animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+    .about-card {
+        background: #ffffff;
+        padding: 50px;
+        border-radius: 20px;
+        border: 1px solid #eaeaea;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        transition: transform 0.3s ease;
+    }
+    .about-card:hover {
+        transform: translateY(-2px);
+    }
+    .about-card h1 {
+        font-size: 32px;
+        font-weight: 800;
+        margin-bottom: 24px;
+        letter-spacing: -1px;
+        color: #111;
+    }
+    .about-card p {
+        margin-bottom: 20px;
+        color: #444;
+        font-size: 17px;
+        line-height: 1.7;
+    }
+    .mission-box {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 12px;
+        border-left: 5px solid #000;
+        margin: 35px 0;
+        position: relative;
+    }
+    .mission-box blockquote {
+        margin: 0;
+        font-size: 19px;
+        font-weight: 600;
+        color: #111;
+        font-style: italic;
+    }
+    .back-link {
+        display: inline-block;
+        margin-top: 20px;
+        color: #666;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s;
+    }
+    .back-link:hover {
+        color: #000;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="about-container">
+    <div class="about-card">
+        <h1>BriefBlog</h1>
+
+        <p>Добро пожаловать в пространство, где ценят ваше время. Мы создали <strong>BriefBlog</strong> как антидот бесконечным лонгридам и информационному шуму.</p>
+
+        <div class="mission-box">
+            <blockquote>«Stay brief, stay bright»</blockquote>
+        </div>
+
+        <p>Это платформа для тех, кто предпочитает суть излишним деталям. Делитесь мыслями, фиксируйте идеи и находите единомышленников без отвлекающих факторов. Только чистый контент.</p>
+
+        <a href="{% url 'post_list' %}" class="back-link">
+            ← Вернуться в ленту
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,445 @@
+{% extends 'base.html' %}
+{% block title %}{% if edit_mode %}Изменить{% else %}Создать{% endif %} запись - BriefBlog{% endblock %}
+
+{% block extra_style %}
+<style>
+    .card {
+        background: white;
+        padding: 30px;
+        border-radius: 14px;
+        border: 1px solid #e5e5e5;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+    }
+
+    .back-link {
+        display: inline-block;
+        text-decoration: none;
+        color: #999;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: color 0.2s;
+        margin-bottom: 20px;
+    }
+    .back-link:hover {
+        color: #111;
+    }
+
+    h1 {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0 0 30px 0;
+        letter-spacing: -0.5px;
+    }
+
+    form label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: #888;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    input[type="text"],
+    textarea {
+        width: 100%;
+        border: none;
+        border-bottom: 1px solid #ccc;
+        padding: 0;
+        margin: 0;
+        background: transparent;
+        font-family: inherit;
+        font-size: 16px;
+        line-height: 24px;
+        outline: none;
+        transition: border-bottom 0.2s;
+        resize: none;
+        overflow: hidden;
+        display: block;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+        border-bottom: 2px solid #111;
+    }
+
+    form::after {
+        content: "";
+        display: table;
+        clear: both;
+    }
+
+    .btn-submit {
+        background: #111;
+        color: white;
+        border: none;
+        padding: 12px 28px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        float: right;
+        margin-top: 20px;
+        transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-submit:hover {
+        background: #333;
+        transform: translateY(-1px);
+    }
+
+    .field-group {
+        margin-bottom: 25px;
+    }
+
+    .field-name {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+
+    .helptext {
+        display: block;
+        font-size: 11px;
+        color: #999;
+        margin-top: 5px;
+    }
+
+    .file-label {
+        display: inline-block;
+        /* Цвет фона: делаем чуть холоднее или нейтральнее */
+        background: #ebebeb;
+
+        /* Квадратность: уменьшаем радиус с 20px до 4px-6px */
+        border-radius: 6px;
+
+        /* Отступы: можно сделать чуть меньше по бокам для компактности */
+        padding: 4px 16px;
+
+        color: #0f0f0f;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+
+        /* Убираем лишние границы, если они были */
+        border: 1px solid #dcdcdc;
+
+        transition: all 0.1s ease;
+        user-select: none;
+        line-height: 1;
+    }
+
+    .file-label:hover {
+        background: #dfdfdf;
+        border-color: #cccccc;
+    }
+
+    .file-label:active {
+        background: #d5d5d5;
+    }
+
+    /* Контейнер превью — копия .post-image-box */
+    #image-preview-container {
+        width: 100%;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #eee;
+        margin-top: 16px;
+        display: none;
+    }
+
+    #image-preview {
+        width: 100%;
+        max-height: 500px;
+        object-fit: cover;
+        display: block;
+    }
+
+    /* --- DISCORD STYLE OVERLAY --- */
+    .image-overlay {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0; top: 0;
+        width: 100vw; height: 100vh;
+        background-color: rgba(0, 0, 0, 0.9);
+        backdrop-filter: blur(10px);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        overflow: hidden;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .image-overlay.active {
+        display: flex;
+        opacity: 1;
+    }
+
+    .overlay-controls {
+        position: fixed;
+        top: 25px;
+        right: 25px;
+        z-index: 10001;
+        display: flex;
+        gap: 8px;
+        user-select: none;
+    }
+
+    .control-btn {
+        background: rgba(28, 28, 30, 0.9) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        color: #ffffff !important;
+        padding: 0 16px;
+        height: 40px;
+        border-radius: 13px; /* Мягкие углы */
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.1s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    .control-btn:hover { background: rgba(45, 45, 48, 1) !important; }
+    .control-btn:active { background: rgba(60, 60, 64, 1) !important; }
+
+    .close-btn-styled {
+        width: 40px;
+        padding: 0;
+    }
+
+    .close-btn-styled svg {
+        width: 18px;
+        height: 18px;
+        fill: white !important;
+    }
+
+    #zoom-toggle-btn { min-width: 110px; }
+
+    #overlay-img-container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 40px;
+        box-sizing: border-box;
+    }
+
+    #overlay-img {
+        max-width: 90%;
+        max-height: 90%;
+        width: auto;
+        height: auto;
+        border-radius: 4px;
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: zoom-in;
+        box-shadow: 0 10px 50px rgba(0,0,0,0.8);
+        will-change: transform;
+    }
+
+    #overlay-img.full-size {
+        transform: scale(3);
+        cursor: zoom-out;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <a href="{% if edit_mode %}{% url 'post_detail' pk=form.instance.pk %}{% else %}{% url 'post_list' %}{% endif %}" class="back-link">
+            ← {% if edit_mode %}Отмена{% else %}Назад к сообществу{% endif %}
+        </a>
+
+        <h1>{% if edit_mode %}Изменить запись{% else %}Создать запись{% endif %}</h1>
+
+        <form method="post" enctype="multipart/form-data" id="post-form">
+            {% csrf_token %}
+
+            {% for field in form %}
+                <div class="field-group">
+                    {% if field.name == 'cover' %}
+                        <span class="field-name">{{ field.label }}</span>
+
+                        <div class="file-upload-wrapper">
+                            <label class="file-label" for="{{ field.id_for_label }}">
+                                <span id="file-name-display">Выбрать фото</span>
+                            </label>
+                            <input type="file" name="{{ field.name }}" id="{{ field.id_for_label }}"
+                                   accept="image/*" style="display: none;" onchange="handleFileSelect(this)">
+                        </div>
+
+                        <div id="image-preview-container">
+                            <img id="image-preview" src="#" alt="Preview">
+                        </div>
+
+                    {% else %}
+                        {# Для остальных полей (Заголовок, Текст) оставляем как было #}
+                        <label>
+                            <span class="field-name">{{ field.label }}</span>
+                            {{ field }}
+                        </label>
+                    {% endif %}
+
+                    {% if field.help_text %}
+                        <span class="helptext">{{ field.help_text|safe }}</span>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <button type="submit" class="btn-submit">
+                {% if edit_mode %}Сохранить изменения{% else %}Опубликовать{% endif %}
+            </button>
+        </form>
+    </div>
+
+    <div id="image-overlay" class="image-overlay">
+        <div class="overlay-controls">
+            <button id="zoom-toggle-btn" class="control-btn">ПРИБЛИЗИТЬ</button>
+            <span class="close-overlay control-btn close-btn-styled">
+                <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+            </span>
+        </div>
+
+        <div id="overlay-img-container">
+            <img id="overlay-img" src="" alt="Zoomed view">
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_script %}
+<script>
+    // --- 1. АВТОВЫСОТА ПОЛЕЙ ---
+    const textInputs = document.querySelectorAll('input[type="text"], textarea');
+    function autoResize() {
+        this.style.setProperty('height', '0px', 'important');
+        const offset = this.scrollHeight;
+        this.style.setProperty('height', (offset < 24 ? 24 : offset) + 'px', 'important');
+    }
+    textInputs.forEach(el => {
+        autoResize.call(el);
+        el.addEventListener('input', autoResize, false);
+    });
+
+    // --- 2. ПРЕДПРОСМОТР КАРТИНКИ ---
+    const fileInput = document.querySelector('input[type="file"]');
+    const previewContainer = document.getElementById('image-preview-container');
+    const previewImage = document.getElementById('image-preview');
+
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.setAttribute('src', e.target.result);
+                    previewContainer.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                previewContainer.style.display = 'none';
+            }
+        });
+    }
+
+    {% if edit_mode and form.instance.cover %}
+        previewImage.setAttribute('src', '{{ form.instance.cover.url }}');
+        previewContainer.style.display = 'block';
+    {% endif %}
+
+    // --- 3. УМНЫЙ ЗУМ (КАК В DETAIL) ---
+    document.addEventListener('DOMContentLoaded', function() {
+        const overlay = document.getElementById('image-overlay');
+        const overlayImg = document.getElementById('overlay-img');
+        const zoomBtn = document.getElementById('zoom-toggle-btn');
+        const closeBtn = document.querySelector('.close-overlay');
+        let isFullSize = false;
+
+        function toggleZoom(e) {
+            if (e) e.stopPropagation();
+            isFullSize = !isFullSize;
+
+            if (isFullSize) {
+                if (e && e.target === overlayImg) {
+                    const rect = overlayImg.getBoundingClientRect();
+                    const x = ((e.clientX - rect.left) / rect.width) * 100;
+                    const y = ((e.clientY - rect.top) / rect.height) * 100;
+                    overlayImg.style.transformOrigin = `${x}% ${y}%`;
+                } else {
+                    overlayImg.style.transformOrigin = '50% 50%';
+                }
+                overlayImg.classList.add('full-size');
+                zoomBtn.innerText = "ОТДАЛИТЬ";
+            } else {
+                overlayImg.classList.remove('full-size');
+                zoomBtn.innerText = "ПРИБЛИЗИТЬ";
+                setTimeout(() => {
+                    if (!isFullSize) overlayImg.style.transformOrigin = '50% 50%';
+                }, 350);
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            if (e.target.id === 'image-preview') {
+                overlayImg.src = e.target.src;
+                isFullSize = false;
+                overlayImg.classList.remove('full-size');
+                overlayImg.style.transformOrigin = '50% 50%';
+                overlay.style.display = 'flex';
+                setTimeout(() => overlay.classList.add('active'), 10);
+                document.body.style.overflow = 'hidden';
+                zoomBtn.innerText = "ПРИБЛИЗИТЬ";
+            }
+        });
+
+        if (overlayImg) overlayImg.addEventListener('click', toggleZoom);
+        if (zoomBtn) zoomBtn.addEventListener('click', toggleZoom);
+
+        function closeOverlay() {
+            overlay.classList.remove('active');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                document.body.style.overflow = '';
+            }, 300);
+        }
+
+        if (closeBtn) closeBtn.addEventListener('click', closeOverlay);
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay || e.target.id === 'overlay-img-container') closeOverlay();
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === "Escape" && overlay.classList.contains('active')) closeOverlay();
+        });
+    });
+
+    function handleFileSelect(input) {
+        const fileNameDisplay = document.getElementById('file-name-display');
+        if (input.files && input.files[0]) {
+            // Обновляем текст на кнопке
+            fileNameDisplay.innerText = input.files[0].name;
+
+            // Код для превью (который у тебя уже должен быть)
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('image-preview');
+                const container = document.getElementById('image-preview-container');
+                preview.src = e.target.result;
+                container.style.display = 'block';
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
+{% endblock %}

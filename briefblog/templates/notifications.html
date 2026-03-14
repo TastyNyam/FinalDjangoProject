@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block title %}Уведомления — BriefBlog{% endblock %}
+
+{% block extra_style %}
+<style>
+    .notif-container {
+        max-width: 650px;
+        margin: 40px auto;
+        padding: 0 20px;
+        animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .notif-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+
+    .notif-header h1 {
+        font-size: 28px;
+        font-weight: 850;
+        letter-spacing: -1px;
+        margin: 0;
+    }
+
+    .notif-card {
+        background: #ffffff;
+        border-radius: 20px;
+        border: 1px solid #eaeaea;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        overflow: hidden;
+    }
+
+    .notif-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 20px;
+        border-bottom: 1px solid #f0f0f0;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        color: inherit;
+        position: relative;
+    }
+
+    .notif-item:last-child {
+        border-bottom: none;
+    }
+
+    .notif-item:hover {
+        background: #fcfcfc;
+    }
+
+    .notif-item.unread {
+        background: #f5f9ff;
+    }
+
+    .notif-item.unread::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: #007aff;
+    }
+
+    .notif-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: #111;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 16px;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+
+    .notif-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .notif-avatar .letter-avatar {
+        color: white;
+        font-weight: 700;
+        font-size: 18px;
+    }
+
+    .notif-info {
+        flex-grow: 1;
+    }
+
+    .notif-user {
+        font-weight: 700;
+        color: #111;
+        margin-right: 4px;
+    }
+
+    .notif-text {
+        font-size: 15px;
+        color: #444;
+        line-height: 1.5;
+    }
+
+    .notif-preview {
+        display: block;
+        margin-top: 6px;
+        padding: 8px 12px;
+        background: #f8f8f8;
+        border-radius: 8px;
+        font-size: 14px;
+        color: #666;
+        border: 1px dashed #ddd;
+    }
+
+    .notif-time {
+        display: block;
+        font-size: 12px;
+        color: #999;
+        margin-top: 8px;
+    }
+
+    .notif-action-icon {
+        margin-left: 12px;
+        align-self: center;
+        color: #ccc;
+    }
+
+    .empty-state {
+        padding: 60px 20px;
+        text-align: center;
+        color: #999;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="notif-container">
+    <div class="notif-header">
+        <h1>Уведомления</h1>
+    </div>
+
+    <div class="notif-card">
+        {% for n in notifications %}
+            <a href="{% if n.post %}{% url 'post_detail' n.post.pk %}{% else %}#{% endif %}"
+               class="notif-item {% if not n.is_read %}unread{% endif %}">
+
+                <div class="notif-avatar">
+                    {% if n.sender.profile.avatar %}
+                        <img src="{{ n.sender.profile.avatar.url }}" alt="{{ n.sender.username }}">
+                    {% else %}
+                        <div class="letter-avatar">{{ n.sender.username|slice:":1"|upper }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="notif-info">
+                    <div class="notif-text">
+                        <span class="notif-user">@{{ n.sender.username }}</span>
+                        {% if n.notification_type == 'like' %}
+                            оценил вашу публикацию
+                        {% elif n.notification_type == 'comment' %}
+                            оставил комментарий к вашему посту
+                        {% elif n.notification_type == 'reply' %}
+                            ответил на ваш комментарий
+                        {% endif %}
+                    </div>
+
+                    {% if n.text %}
+                        <span class="notif-preview">«{{ n.text|truncatechars:60 }}»</span>
+                    {% endif %}
+
+                    <span class="notif-time">{{ n.created_at|timesince }} назад</span>
+                </div>
+
+                <div class="notif-action-icon">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+                    </svg>
+                </div>
+            </a>
+        {% empty %}
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24" width="48" height="48" fill="#eee" style="margin-bottom: 16px;">
+                    <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6.35-5.56V11c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.99 5.36 6.35 7.92 6.35 11v5.44L5 17.88V19h14v-1.12l-1.35-1.44z"/>
+                </svg>
+                <p>Здесь пока пусто. Активность появится тут!</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

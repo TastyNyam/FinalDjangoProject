@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+{% block title %}{{ user_profile.profile.display_name|default:user_profile.username }} - Профиль{% endblock %}
+
+{% block extra_style %}
+<style>
+    /* --- ШАПКА ПРОФИЛЯ --- */
+    .profile-header {
+        background: white;
+        padding: 40px 20px;
+        border-radius: 14px;
+        border: 1px solid #e5e5e5;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .profile-avatar-big {
+        width: 120px;
+        height: 120px;
+        background: #f2f2f2;
+        color: #111;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 48px;
+        font-weight: 700;
+        margin: 0 auto 15px;
+        border: 1px solid #eee;
+        overflow: hidden;
+    }
+
+    .profile-avatar-big img { width: 100%; height: 100%; object-fit: cover; }
+
+    .profile-display-name { font-size: 24px; font-weight: 700; margin-bottom: 2px; color: #111; }
+    .profile-username { font-size: 16px; color: #999; margin-bottom: 15px; }
+    .profile-bio { max-width: 450px; margin: 0 auto 20px; font-size: 15px; line-height: 1.5; color: #444; }
+
+    .profile-stats-row {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        border-top: 1px solid #f5f5f5;
+        padding-top: 20px;
+    }
+
+    .stat-item { display: flex; flex-direction: column; }
+    .stat-value { font-weight: 700; font-size: 18px; color: #111; }
+    .stat-label { font-size: 12px; color: #999; text-transform: uppercase; }
+
+    .section-label {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #999;
+        margin-bottom: 20px;
+        display: block;
+    }
+
+    /* --- СТИЛИ КАРТОЧЕК (КОПИЯ ИЗ POST_LIST) --- */
+    .post-card-link { text-decoration: none; color: inherit; display: block; margin-bottom: 16px; }
+
+    .post-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e5e5e5;
+        padding: 16px;
+        transition: background-color 0.2s ease, box-shadow 0.2s ease;
+        animation: fadeInUp 0.6s ease forwards;
+    }
+
+    .post-card:hover {
+        background-color: #fdfdfd;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        border-color: #d0d0d0;
+    }
+
+    .post-header { display: flex; align-items: center; margin-bottom: 12px; }
+
+    .author-avatar {
+        width: 36px;
+        height: 36px;
+        background: #111;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        font-weight: 700;
+        margin-right: 12px;
+        overflow: hidden;
+    }
+    .author-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    .author-info { display: flex; flex-direction: column; }
+    .author-name { font-size: 14px; font-weight: 600; color: #0f0f0f; text-decoration: none; }
+    .post-date { font-size: 12px; color: #606060; }
+
+    .post-title { display: block; font-weight: 700; font-size: 18px; margin-bottom: 6px; color: #111; }
+    .post-excerpt { font-size: 15px; line-height: 1.5; color: #0f0f0f; word-wrap: break-word; }
+
+    .post-image-box {
+        width: 100%;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #eee;
+        margin-top: 12px;
+    }
+    .post-image-box img { width: 100%; max-height: 500px; object-fit: cover; display: block; }
+
+    .post-actions { display: flex; align-items: center; margin-top: 14px; gap: 8px; }
+
+    .action-pill {
+        display: flex;
+        align-items: center;
+        background: #f2f2f2;
+        border-radius: 20px;
+        padding: 6px 14px;
+        color: #0f0f0f;
+        font-size: 13px;
+        font-weight: 500;
+        transition: background 0.2s;
+    }
+
+    .action-icon-svg {
+        width: 18px;
+        height: 18px;
+        margin-right: 6px;
+        fill: currentColor;
+        display: flex;
+        align-items: center;
+    }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .like-btn.active {
+        background: #0f0f0f;
+        color: #fff;
+    }
+
+    .like-btn.active .action-icon-svg {
+        fill: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="profile-header">
+        <div class="profile-avatar-big">
+            {% if user_profile.profile.avatar %}
+                <img src="{{ user_profile.profile.avatar.url }}" alt="{{ user_profile.username }}">
+            {% else %}
+                {{ user_profile.username|slice:":1"|upper }}
+            {% endif %}
+        </div>
+
+        <div class="profile-display-name">
+            {{ user_profile.profile.display_name|default:user_profile.username }}
+        </div>
+        <div class="profile-username">@{{ user_profile.username }}</div>
+
+        {% if user_profile.profile.bio %}
+            <div class="profile-bio">{{ user_profile.profile.bio }}</div>
+        {% endif %}
+
+        {% if user == user_profile %}
+            <a href="{% url 'settings' %}" class="action-pill" style="display: inline-flex; margin-bottom: 20px; text-decoration: none;">
+                Редактировать профиль
+            </a>
+        {% endif %}
+
+        <div class="profile-stats-row">
+            <div class="stat-item">
+                <span class="stat-value">{{ posts.count }}</span>
+                <span class="stat-label">Записей</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ total_likes }}</span>
+                <span class="stat-label">Лайков</span>
+            </div>
+        </div>
+    </div>
+
+    <span class="section-label">Записи автора</span>
+
+    {% for post in posts %}
+        <a href="{% url 'post_detail' pk=post.pk %}" class="post-card-link">
+            <article class="post-card">
+
+                <div class="post-header">
+                    <div class="author-avatar">
+                        {% if post.author.profile.avatar %}
+                            <img src="{{ post.author.profile.avatar.url }}" alt="{{ post.author.username }}">
+                        {% else %}
+                            {{ post.author.username|slice:":1"|upper }}
+                        {% endif %}
+                    </div>
+                    <div class="author-info">
+                        <span class="author-name">
+                            {{ post.author.profile.display_name|default:post.author.username }}
+                        </span>
+                        <span class="post-date">@{{ post.author.username }} • {{ post.created_at|date:"d E Y" }}</span>
+                    </div>
+                </div>
+
+                <div class="post-content-area">
+                    {% if post.title %}
+                        <span class="post-title">{{ post.title }}</span>
+                    {% endif %}
+                    <div class="post-excerpt">{{ post.body|truncatechars:280 }}</div>
+                </div>
+
+                {% if post.cover %}
+                    <div class="post-image-box">
+                        <img src="{{ post.cover.url }}" alt="{{ post.title }}">
+                    </div>
+                {% endif %}
+
+                <div class="post-actions">
+                    <div class="action-pill like-btn {% if post.is_liked %}active{% endif %}" data-post-id="{{ post.pk }}">
+                        <span class="action-icon-svg">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32
+                                         c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10
+                                         c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/>
+                            </svg>
+                        </span>
+                        <span class="like-count">{{ post.likes.count }}</span>
+                    </div>
+
+                    <div class="action-pill">
+                        <span class="action-icon-svg">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4
+                                         c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/>
+                            </svg>
+                        </span>
+                        <span>{{ post.comments.count }}</span>
+                    </div>
+                </div>
+            </article>
+        </a>
+    {% empty %}
+        <div class="no-posts" style="text-align: center; padding: 40px; color: #888;">
+            <p>У этого автора пока нет записей.</p>
+        </div>
+    {% endfor %}
+{% endblock %}
+
+{% block extra_script %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.like-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation(); // чтобы не срабатывала ссылка на пост
+
+            const postId = this.dataset.postId;
+            const likeCountSpan = this.querySelector('.like-count');
+
+            fetch(`/briefblog/post/${postId}/like/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Accept': 'application/json'
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.likes_count !== undefined) {
+                    likeCountSpan.textContent = data.likes_count;
+
+                    // Активируем/деактивируем кнопку
+                    if (data.liked) {
+                        this.classList.add('active');
+                    } else {
+                        this.classList.remove('active');
+                    }
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

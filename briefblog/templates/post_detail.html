@@ -1,0 +1,951 @@
+{% extends 'base.html' %}
+{% block title %}{{ post.title }} - BriefBlog{% endblock %}
+
+{% block extra_style %}
+<style>
+    .post-card {
+        background: white;
+        /* Уменьшаем верхний отступ до 12px, как в ленте */
+        padding: 12px 20px 20px 20px;
+        border-radius: 12px;
+        border: 1px solid #e5e5e5;
+        animation: fadeInUp 0.7s ease-out forwards;
+    }
+
+    .post-header {
+        display: flex;
+        align-items: center;
+        margin-top: 0; /* Убираем лишний зазор */
+        margin-bottom: 16px;
+    }
+
+    .author-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .author-name {
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .author-avatar {
+        width: 36px;
+        height: 36px;
+        background: #111;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        font-weight: 700;
+        margin-right: 12px;
+        overflow: hidden;
+    }
+
+    .author-avatar-link {
+        text-decoration: none;
+        display: block;
+    }
+
+    .avatar-img {
+        width: 100%;
+        height: 100%;
+        /* МЫ ЗАМЕНИМ ЭТУ СТРОКУ: */
+        object-fit: cover; /* Картинка будет помещаться целиком */
+        cursor: pointer !important;
+        display: block;
+    }
+
+    .post-date {
+        font-size: 12px;
+        color: #606060;
+    }
+
+    .post-title {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 10px 0;
+        line-height: 1.3;
+    }
+
+    .post-body {
+        font-size: 16px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        margin-bottom: 20px;
+        color: #111;
+    }
+
+    .post-card img:not(.avatar-img) {
+        width: 100%;
+        max-height: 700px; /* Увеличим для детального просмотра */
+        object-fit: contain;
+        background: #f8f8f8; /* Более светлый и чистый фон */
+        border-radius: 12px;
+        border: 1px solid #f0f0f0;
+        margin: 20px 0;
+        cursor: zoom-in;
+        display: block;
+    }
+
+    /* --- СОВРЕМЕННЫЕ ЛАЙКИ --- */
+    .like-section {
+        display: flex;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #eee;
+        margin-bottom: 24px;
+    }
+
+    .like-btn {
+        background: #f2f2f2;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        transition: background 0.2s;
+        color: #0f0f0f;
+    }
+
+    .like-btn:hover { background: #e5e5e5; }
+
+    .icon-svg {
+        width: 18px;
+        height: 18px;
+        margin-right: 8px;
+        fill: currentColor;
+        display: flex;
+        align-items: center;
+    }
+
+    /* Комментарии */
+    .comments-section h2 {
+        font-size: 18px;
+        margin-bottom: 20px;
+        font-weight: 700;
+    }
+
+    .comment-form {
+        margin: 0; /* Убираем лишние внешние отступы */
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+    }
+
+    .comment-form textarea {
+        width: 100%;
+        border: none;
+        border-bottom: 1px solid #ccc;
+        padding: 0;
+        margin: 0;
+
+        /* Радикальное решение */
+        height: 20px;          /* Стартовая высота ровно под 1 строку */
+        min-height: 20px !important;
+        line-height: 20px;     /* Высота строки совпадает с высотой поля */
+
+        font-family: inherit;
+        font-size: 14px;
+        resize: none;
+        outline: none;
+        background: transparent;
+        transition: border-bottom 0.2s;
+        overflow: hidden;      /* Прячем всё, что не влезает, пока скрипт не сработал */
+        display: block;
+    }
+
+    .comment-form textarea:focus {
+        border-bottom: 2px solid #0f0f0f;
+    }
+
+    .comment-form button {
+        background: #111;
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 18px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 13px;
+        margin-top: 8px; /* Расстояние от линии до кнопки */
+        transition: background 0.2s;
+    }
+
+    .comment-form button:hover {
+        background: #333;
+    }
+
+    .comment {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+        clear: both;
+    }
+
+    .comment-avatar {
+        width: 36px;
+        height: 36px;
+        background: #eee;
+        color: #111;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 700;
+        flex-shrink: 0;
+        overflow: hidden; /* КРИТИЧНО: чтобы картинка не вылезала за кружок */
+    }
+
+    /* Стили для маленьких аватарок в ответах */
+    .replies .comment-avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+
+    /* Применяем наш "зум", чтобы чубрик был на весь круг */
+    .comment-avatar .avatar-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transform-origin: center;
+    }
+
+    .comment-content {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .comment-author {
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+
+    .comment-text {
+        font-size: 14px;
+        line-height: 1.5;
+        color: #222;
+    }
+
+    .back-link {
+        display: inline-block;
+        text-decoration: none;
+        color: #999; /* Спокойный серый цвет */
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase; /* В один стиль с лейблами форм */
+        letter-spacing: 0.5px;
+        transition: color 0.2s;
+        margin-bottom: 10px; /* Отступ от шапки поста */
+    }
+
+    .back-link:hover {
+        color: #111; /* При наведении становится четкой */
+    }
+
+    .post-controls {
+        display: flex;
+        gap: 15px;
+    }
+
+    .control-link {
+        text-decoration: none;
+        color: #999;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: color 0.2s;
+    }
+
+    .control-link:hover {
+        color: #111;
+    }
+
+    .delete-link:hover {
+        color: #d93025; /* Красный при наведении на удаление */
+    }
+
+    /* Состояние, когда лайк поставлен */
+    .like-btn.active {
+        background: #0f0f0f; /* Черный фон */
+        color: #ffffff;      /* Белый текст */
+    }
+
+    .like-btn.active .icon-svg {
+        fill: #ffffff;       /* Белая иконка */
+    }
+
+    /* --- DISCORD STYLE OVERLAY --- */
+    .image-overlay {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0; top: 0;
+        width: 100vw; height: 100vh;
+        background-color: rgba(0, 0, 0, 0.9);
+        backdrop-filter: blur(10px);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        overflow: hidden;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .image-overlay.active {
+        display: flex;
+        opacity: 1;
+    }
+
+    /* Кнопки теперь ТОЧНО будут видны */
+    /* Контейнер кнопок */
+    .overlay-controls {
+        position: fixed;
+        top: 25px;
+        right: 25px;
+        z-index: 10001;
+        display: flex;
+        gap: 8px; /* Чуть плотнее друг к другу */
+        user-select: none;
+    }
+
+    /* Единый стиль для всех кнопок в оверлее */
+    .control-btn {
+        background: rgba(28, 28, 30, 0.9) !important; /* Глубокий темный без лишней прозрачности */
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        color: #ffffff !important;
+
+        /* Мягкие квадраты */
+        padding: 0 16px;
+        height: 40px;
+        border-radius: 13px; /* Тот самый мягкий угол */
+
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        /* Убираем анимации движения, оставляем только быстрый цвет */
+        transition: background 0.1s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Состояние при наведении — просто меняем яркость */
+    .control-btn:hover {
+        background: rgba(45, 45, 48, 1) !important;
+    }
+
+    /* Состояние при нажатии — мгновенный отклик */
+    .control-btn:active {
+        background: rgba(60, 60, 64, 1) !important;
+    }
+
+    /* Делаем крестик таким же квадратным, как кнопка зума */
+    .close-btn-styled {
+        width: 40px; /* Квадрат */
+        padding: 0;
+        border-radius: 13px;
+    }
+
+    .close-btn-styled svg {
+        width: 18px;
+        height: 18px;
+        fill: white !important;
+        /* Убрали анимацию вращения */
+    }
+
+    /* Уточняем ширину кнопки зума, чтобы она не прыгала при смене текста */
+    #zoom-toggle-btn {
+        min-width: 110px;
+    }
+
+    #overlay-img-container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 40px;
+        box-sizing: border-box;
+    }
+
+    #overlay-img {
+        max-width: 90%;
+        max-height: 90%;
+        width: auto;
+        height: auto;
+        border-radius: 4px;
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: zoom-in;
+        box-shadow: 0 10px 50px rgba(0,0,0,0.8);
+        image-rendering: -webkit-optimize-contrast; /* Делает картинку чуть четче при увеличении */
+        will-change: transform; /* Подсказывает браузеру подготовить видеокарту */
+    }
+
+    #overlay-img.full-size {
+        transform: scale(3); /* Оптимальный зум */
+        cursor: zoom-out;
+    }
+
+    /* Делаем курсор-лупу на основной картинке в посте */
+    .post-card img {
+        cursor: zoom-in;
+        transition: opacity 0.2s;
+    }
+
+    .post-card img:hover {
+        opacity: 0.9;
+    }
+
+    /* Анимация для всей карточки поста */
+    .post-card {
+        animation: fadeInUp 0.7s ease-out forwards;
+    }
+
+    /* Анимация для каждого комментария (чтобы они выплывали по очереди) */
+    .comment {
+        opacity: 0;
+        animation: fadeInUp 0.5s ease-out forwards;
+    }
+
+    /* Задержка для комментариев, чтобы они шли после основного поста */
+    .comment:nth-child(1) { animation-delay: 0.3s; }
+    .comment:nth-child(2) { animation-delay: 0.4s; }
+    .comment:nth-child(3) { animation-delay: 0.5s; }
+
+    .replies {
+        margin-left: 42px; /* Чуть больше отступ для четкой иерархии */
+        border-left: 2px solid #efefef;
+        padding-left: 20px;
+        margin-top: 10px;
+    }
+
+    /* Сделаем аватарки в ответах чуть меньше основного комментария */
+    .replies .comment-avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
+    }
+
+    @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; visibility: hidden; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <article class="post-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <a href="{% url 'post_list' %}" class="back-link" style="margin-bottom: 0;">← Назад к сообществу</a>
+
+            {% if post.author == request.user %}
+            <div class="post-controls">
+                <a href="{% url 'post_edit' pk=post.pk %}" class="control-link">Edit</a>
+                <a href="{% url 'post_delete' pk=post.pk %}"
+                   class="control-link delete-link"
+                   onclick="return confirm('Удалить этот пост навсегда?')">Delete</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="post-header" style="margin-top: 20px;">
+            <a href="{% url 'profile' post.author.username %}" class="author-avatar-link">
+                <div class="author-avatar">
+                    {% if post.author.profile.avatar %}
+                        <img src="{{ post.author.profile.avatar.url }}" alt="{{ post.author.username }}" class="avatar-img">
+                    {% else %}
+                        {{ post.author.username|slice:":1"|upper }}
+                    {% endif %}
+                </div>
+            </a>
+            <div class="author-info">
+                <a href="{% url 'profile' post.author.username %}" class="author-name" style="text-decoration: none; color: inherit;">
+                    {{ post.author.profile.display_name|default:post.author.username }}
+                </a>
+                <span class="post-date">@{{ post.author.username }} • {{ post.created_at|date:"d E Y" }}</span>
+            </div>
+        </div>
+
+        {% if post.title %}
+            <h1 class="post-title">{{ post.title }}</h1>
+        {% endif %}
+        <div class="post-body">{{ post.body }}</div>
+
+        {% if post.cover %}
+            <img src="{{ post.cover.url }}" alt="Cover">
+        {% endif %}
+
+        <div class="like-section">
+            <button type="button"
+                    class="like-btn {% if is_liked %}active{% endif %}"
+                    id="like-btn"
+                    data-url="{% url 'like_post' pk=post.pk %}">
+                <span class="icon-svg">
+                    <svg viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>
+                </span>
+                <span id="like-count">{{ post.likes.count }}</span>
+            </button>
+        </div>
+
+        <div class="comments-section" id="comments-wrapper">
+            <h2>{{ post.comments.count }} комментариев</h2>
+
+            <form method="post" class="comment-form" id="comment-form"
+                  action="{% if edit_mode %}{% url 'comment_edit' edit_comment.pk %}{% endif %}">
+                {% csrf_token %}
+
+                <input type="hidden" name="parent_id" id="parent_id" value="">
+                <input type="hidden" name="reply_to_user" id="reply_to_user" value="">
+
+                {% if edit_mode %}
+                    <div style="width: 100%; font-size: 12px; color: #f39c12; margin-bottom: 8px; display: flex; justify-content: space-between;">
+                        <span>Редактирование комментария...</span>
+                        <a href="{% url 'post_detail' post.pk %}" style="color:#d93025; text-decoration:none;">ОТМЕНИТЬ</a>
+                    </div>
+                {% endif %}
+
+                <div id="replying-to" style="display: none; width: 100%; font-size: 12px; color: #606060; margin-bottom: 5px;">
+                    Ответ пользователю <span id="reply-author"></span>
+                    <button type="button" onclick="cancelReply()" style="background: none; border: none; color: #d93025; cursor: pointer; font-size: 12px; padding: 0; margin-left: 5px;">(Отменить)</button>
+                </div>
+
+                <textarea name="text" id="comment-textarea" placeholder="Введите комментарий..." required>{{ form.text.value|default_if_none:"" }}</textarea>
+
+                <button type="submit">{% if edit_mode %}Сохранить{% else %}Отправить{% endif %}</button>
+            </form>
+
+            <div id="comments-list"> {% for comment in main_comments %}
+                <div class="comment" id="comment-{{ comment.id }}" style="margin-top: 24px;">
+                    <a href="{% url 'profile' comment.author.username %}" class="author-avatar-link">
+                        <div class="comment-avatar">
+                            {% if comment.author.profile.avatar %}
+                                <img src="{{ comment.author.profile.avatar.url }}" alt="{{ comment.author.username }}" class="avatar-img">
+                            {% else %}
+                                {{ comment.author.username|slice:":1"|upper }}
+                            {% endif %}
+                        </div>
+                    </a>
+                    <div class="comment-content">
+                        <div class="comment-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            <a href="{% url 'profile' comment.author.username %}"
+                               style="font-size: 13px; font-weight: 700; color: #0f0f0f; text-decoration: none;">
+                                @{{ comment.author.username }}
+                            </a>
+                            <span style="font-size: 12px; color: #606060; font-weight: 400;">
+                                • {{ comment.created_at|date:"d M Y" }}
+                            </span>
+                        </div>
+
+                        <span class="comment-text">{{ comment.text }}</span>
+
+                        <div class="comment-controls" style="display: flex; gap: 12px; margin-top: 8px; align-items: center;">
+                            <button type="button" class="control-link"
+                                    style="background:none; border:none; cursor:pointer; padding:0; color:#999; font-size:11px;"
+                                    onclick="prepareReply('{{ comment.id }}', '{{ comment.author.username }}')">
+                                ОТВЕТИТЬ
+                            </button>
+
+                            {% if request.user == comment.author or request.user == post.author %}
+                                <a href="{% url 'comment_delete' comment.pk %}" class="control-link delete-link"
+                                   style="text-decoration:none; font-size:11px; color:#999;"
+                                   onclick="return confirm('Удалить этот комментарий?')">УДАЛИТЬ</a>
+                            {% endif %}
+
+                            {% if request.user == comment.author %}
+                                <a href="{% url 'comment_edit' comment.pk %}" class="control-link"
+                                   style="text-decoration:none; font-size:11px; color:#999;">ИЗМЕНИТЬ</a>
+                            {% endif %}
+                        </div>
+
+                        {% if comment.replies.all %}
+                            <div class="replies" style="margin-left: 30px; border-left: 2px solid #f0f0f0; padding-left: 15px; margin-top: 15px;">
+                                {% for reply in comment.replies.all %}
+                                    <div class="comment" id="comment-{{ reply.id }}" style="margin-top: 15px; gap: 10px;">
+                                        <a href="{% url 'profile' reply.author.username %}" class="author-avatar-link">
+                                            <div class="comment-avatar">
+                                                {% if reply.author.profile.avatar %}
+                                                    <img src="{{ reply.author.profile.avatar.url }}" alt="{{ reply.author.username }}" class="avatar-img">
+                                                {% else %}
+                                                    {{ reply.author.username|slice:":1"|upper }}
+                                                {% endif %}
+                                            </div>
+                                        </a>
+                                        <div class="comment-content">
+                                            <span class="comment-author" style="font-size: 12px; font-weight: 700;">
+                                                <a href="{% url 'profile' reply.author.username %}" style="text-decoration: none; color: inherit;">@{{ reply.author.username }}</a>
+                                                <span style="color: #999; font-weight: 400;"> ответил </span>
+                                                <a href="{% url 'profile' reply.reply_to|default:comment.author.username %}" style="text-decoration: none; color: inherit;">
+                                                    @{{ reply.reply_to|default:comment.author.username }}
+                                                </a>
+                                                <span style="font-weight: 400; color: #606060; margin-left: 5px;">• {{ reply.created_at|date:"d M Y" }}</span>
+                                            </span>
+                                            <span class="comment-text" style="font-size: 13px;">{{ reply.text }}</span>
+
+                                            <div class="comment-controls" style="display: flex; gap: 12px; margin-top: 4px;">
+                                                <button type="button" class="control-link"
+                                                        style="background:none; border:none; cursor:pointer; padding:0; color:#999; font-size:10px;"
+                                                        onclick="prepareReply('{{ comment.id }}', '{{ reply.author.username }}', '{{ reply.id }}')">
+                                                    ОТВЕТИТЬ
+                                                </button>
+
+                                                {% if request.user == reply.author or request.user == post.author %}
+                                                    <a href="{% url 'comment_delete' reply.pk %}" class="control-link delete-link"
+                                                       style="text-decoration:none; font-size:10px; color:#999;"
+                                                       onclick="return confirm('Удалить ответ?')">УДАЛИТЬ</a>
+                                                {% endif %}
+
+                                                {% if request.user == reply.author %}
+                                                    <a href="{% url 'comment_edit' reply.pk %}" class="control-link"
+                                                       style="text-decoration:none; font-size:10px; color:#999;">ИЗМЕНИТЬ</a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <p id="no-comments-msg" style="color:#777; margin-top: 20px; font-size: 14px;">Пока комментариев нет. Будьте первым!</p>
+            {% endfor %}
+            </div>
+        </div>
+    </article>
+
+    <div id="image-overlay" class="image-overlay">
+        <div class="overlay-controls">
+            <button id="zoom-toggle-btn" class="control-btn">ПРИБЛИЗИТЬ</button>
+            <span class="close-overlay control-btn close-btn-styled">
+                <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+            </span>
+        </div>
+
+        <div id="overlay-img-container">
+            <img id="overlay-img" src="" alt="Zoomed view">
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_script %}
+<script>
+    // --- 1. ЛОГИКА ЛАЙКОВ (AJAX) ---
+    const likeBtn = document.getElementById('like-btn');
+    const likeCount = document.getElementById('like-count');
+
+    if (likeBtn) {
+        likeBtn.addEventListener('click', function() {
+            const url = this.getAttribute('data-url');
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.likes_count !== undefined) {
+                    likeCount.innerText = data.likes_count;
+                    if (data.liked) {
+                        likeBtn.classList.add('active');
+                    } else {
+                        likeBtn.classList.remove('active');
+                    }
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    }
+
+    // --- 2. АВТОВЫСОТА TEXTAREA ---
+    const tx = document.getElementById('comment-textarea');
+
+    function autoResize() {
+        this.style.setProperty('height', '0px', 'important');
+        const offset = this.scrollHeight;
+        this.style.setProperty('height', (offset < 20 ? 20 : offset) + 'px', 'important');
+    }
+
+    if (tx) {
+        tx.addEventListener("input", autoResize, false);
+    }
+
+    // --- 3. ЛОГИКА ОТВЕТОВ НА КОММЕНТАРИИ ---
+    // Сохраняем начальное место формы (над списком всех комментов)
+    const formParentOriginal = document.getElementById('comment-form').parentNode;
+    const formNextSiblingOriginal = document.getElementById('comment-form').nextSibling;
+
+    function prepareReply(parentId, authorName, replyId = null) {
+        const form = document.getElementById('comment-form');
+        const textarea = document.getElementById('comment-textarea');
+        const parentInput = document.getElementById('parent_id');
+        const replyToInput = document.getElementById('reply_to_user');
+        const replyInfo = document.getElementById('replying-to');
+        const replyAuthorSpan = document.getElementById('reply-author');
+
+        // 1. Определяем "цель" — куда именно вставлять форму.
+        // Если есть replyId (ответ на ответ), ищем этот конкретный блок.
+        // Если нет — ищем главный коммент.
+        const targetElementId = replyId ? `comment-${replyId}` : `comment-${parentId}`;
+        const targetComment = document.getElementById(targetElementId);
+
+        if (targetComment) {
+            const commentContent = targetComment.querySelector('.comment-content');
+
+            // Вставляем форму прямо в контент того сообщения, на которое нажали
+            // (перед списком вложенных ответов, если они есть)
+            const existingReplies = commentContent.querySelector('.replies');
+            if (existingReplies) {
+                commentContent.insertBefore(form, existingReplies);
+            } else {
+                commentContent.appendChild(form);
+            }
+        }
+
+        // 2. Заполняем скрытые поля
+        parentInput.value = parentId; // Главная ветка остается прежней
+        replyToInput.value = authorName; // А вот конкретный адресат меняется
+
+        replyAuthorSpan.innerText = '@' + authorName;
+        replyInfo.style.display = 'block';
+        textarea.placeholder = "Ваш ответ для @" + authorName + "...";
+
+        form.style.marginTop = "15px";
+        form.style.marginBottom = "15px";
+        textarea.focus();
+    }
+
+    function cancelReply() {
+        const form = document.getElementById('comment-form');
+        const textarea = document.getElementById('comment-textarea');
+
+        // 1. Возвращаем форму на её законное место (в начало списка комментов)
+        formParentOriginal.insertBefore(form, formNextSiblingOriginal);
+
+        // 2. Очищаем данные
+        document.getElementById('parent_id').value = '';
+        document.getElementById('reply_to_user').value = '';
+        document.getElementById('replying-to').style.display = 'none';
+        textarea.placeholder = "Введите комментарий...";
+
+        // 3. Сбрасываем стили отступов
+        form.style.marginTop = "0";
+        form.style.marginBottom = "0";
+    }
+
+    // --- 4. ОВЕРЛЕЙ ДЛЯ ИЗОБРАЖЕНИЙ (ZOOM) ---
+    document.addEventListener('DOMContentLoaded', function() {
+        const overlay = document.getElementById('image-overlay');
+        const overlayImg = document.getElementById('overlay-img');
+        const zoomBtn = document.getElementById('zoom-toggle-btn');
+        const closeBtn = document.querySelector('.close-overlay');
+        let isFullSize = false; // Состояние: картинка обычная или 1:1
+
+        // Функция переключения масштаба
+        function toggleZoom(e) {
+            if (e) e.stopPropagation();
+            isFullSize = !isFullSize;
+
+            if (isFullSize) {
+                // 1. Вычисляем, куда именно нажал пользователь
+                // Если нажали на кнопку, а не на картинку, используем центр (50% 50%)
+                if (e && e.target === overlayImg) {
+                    const rect = overlayImg.getBoundingClientRect();
+                    const x = ((e.clientX - rect.left) / rect.width) * 100;
+                    const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+                    // Устанавливаем точку, в которую будем "нырять"
+                    overlayImg.style.transformOrigin = `${x}% ${y}%`;
+                } else {
+                    overlayImg.style.transformOrigin = '50% 50%';
+                }
+
+                overlayImg.classList.add('full-size');
+                zoomBtn.innerText = "ОТДАЛИТЬ";
+            } else {
+                overlayImg.classList.remove('full-size');
+                zoomBtn.innerText = "ПРИБЛИЗИТЬ";
+
+                // Возвращаем центр после отдаления (через небольшую задержку, чтобы не дергалось)
+                setTimeout(() => {
+                    if (!isFullSize) overlayImg.style.transformOrigin = '50% 50%';
+                }, 350);
+            }
+        }
+
+        // В функции открытия оверлея (openOverlay или внутри click)
+        // обязательно сбрасывай масштаб:
+        isFullSize = false;
+        overlayImg.classList.remove('full-size');
+
+        // 1. Открытие оверлея
+        document.addEventListener('click', function(e) {
+            const target = e.target;
+
+            // Исправленное условие: все скобки на месте
+            if (
+                (target.matches('.post-card img') && !target.classList.contains('avatar-img')) ||
+                target.matches('#image-preview')
+            ) {
+                if (target.src && !target.src.endsWith('#')) {
+                    overlayImg.src = target.src;
+
+                    isFullSize = false;
+                    overlayImg.classList.remove('full-size');
+
+                    overlay.style.display = 'flex';
+                    setTimeout(() => overlay.classList.add('active'), 10);
+                    document.body.style.overflow = 'hidden';
+                    zoomBtn.innerText = "ПРИБЛИЗИТЬ";
+                }
+            }
+        });
+
+        // 2. Управление зумом внутри оверлея
+        if (overlayImg) overlayImg.addEventListener('click', toggleZoom);
+        if (zoomBtn) zoomBtn.addEventListener('click', toggleZoom);
+
+        // 3. Закрытие оверлея
+        function closeOverlay() {
+            overlay.classList.remove('active');
+            setTimeout(() => overlay.style.display = 'none', 300);
+            document.body.style.overflow = '';
+        }
+
+        if (closeBtn) closeBtn.addEventListener('click', closeOverlay);
+
+        // Закрытие по клику на фон (мимо картинки)
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay || e.target.id === 'overlay-img-container') {
+                closeOverlay();
+            }
+        });
+
+        // Закрытие по кнопке ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === "Escape" && overlay.classList.contains('active')) {
+                closeOverlay();
+            }
+        });
+    });
+
+    // --- 5. AJAX ОТПРАВКА КОММЕНТАРИЕВ ---
+    const commentForm = document.getElementById('comment-form');
+    const commentsList = document.getElementById('comments-list');
+    const noCommentsMsg = document.getElementById('no-comments-msg');
+
+    if (commentForm) {
+        commentForm.addEventListener('submit', function(e) {
+            // Если это РЕДАКТИРОВАНИЕ (edit_mode), пусть работает обычный редирект
+            // Мы делаем AJAX только для новых комментов
+            if (window.location.href.includes('edit')) return;
+
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const url = this.action || window.location.href;
+
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    // CSRF токен уже внутри FormData
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // 1. Очищаем форму
+                    commentForm.reset();
+                    cancelReply(); // Закрываем плашку "Ответ пользователю"
+
+                    // 2. Создаем HTML нового комментария
+                    const avatar = data.avatar_url
+                        ? `<img src="${data.avatar_url}" class="avatar-img">`
+                        : data.author.charAt(0).toUpperCase();
+
+                    // Формируем контент аватарки (картинка или первая буква)
+                    const avatarContent = data.avatar_url
+                        ? `<img src="${data.avatar_url}" class="avatar-img">`
+                        : data.author.charAt(0).toUpperCase();
+
+                    // Формируем строку автора (с учетом того, ответил он кому-то или нет)
+                    const replyHeader = data.reply_to
+                        ? `<a href="/profile/${data.author}/" style="font-size: 13px; font-weight: 700; color: #0f0f0f; text-decoration: none;">@${data.author}</a>
+                           <span style="color: #999; font-weight: 400;"> ответил </span>
+                           <a href="/profile/${data.reply_to}/" style="font-size: 13px; font-weight: 700; color: #0f0f0f; text-decoration: none;">@${data.reply_to}</a>`
+                        : `<a href="/profile/${data.author}/" style="font-size: 13px; font-weight: 700; color: #0f0f0f; text-decoration: none;">@${data.author}</a>`;
+
+                    const newCommentHtml = `
+                        <div class="comment" id="comment-${data.comment_id}" style="animation: fadeInUp 0.5s ease-out forwards;">
+                            <div class="comment-avatar">${avatarContent}</div>
+                            <div class="comment-content">
+                                <div class="comment-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                    ${replyHeader}
+                                    <span style="font-size: 12px; color: #606060; font-weight: 400;">• ${data.created_at}</span>
+                                </div>
+                                <span class="comment-text">${data.text}</span>
+
+                                <div class="comment-controls" style="display: flex; gap: 12px; margin-top: 8px; align-items: center;">
+                                    <button type="button" class="control-link"
+                                            style="background:none; border:none; cursor:pointer; padding:0; color:#999; font-size:11px;"
+                                            onclick="prepareReply('${data.parent_id ? data.parent_id : data.comment_id}', '${data.author}')">
+                                        ОТВЕТИТЬ
+                                    </button>
+
+                                    <a href="/comment/${data.comment_id}/delete/" class="control-link delete-link"
+                                       style="text-decoration:none; font-size:11px; color:#999;"
+                                       onclick="return confirm('Удалить этот комментарий?')">УДАЛИТЬ</a>
+
+                                    <a href="/comment/${data.comment_id}/edit/" class="control-link"
+                                       style="text-decoration:none; font-size:11px; color:#999;">ИЗМЕНИТЬ</a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    // 3. Вставляем в список
+                    if (data.parent_id) {
+                        // Если это ответ, находим родительский коммент и пушим в его .replies
+                        const parentDiv = document.getElementById(`comment-${data.parent_id}`);
+                        let repliesDiv = parentDiv.querySelector('.replies');
+                        if (!repliesDiv) {
+                            // Если это первый ответ в ветке, создаем контейнер replies
+                            repliesDiv = document.createElement('div');
+                            repliesDiv.className = 'replies';
+                            parentDiv.querySelector('.comment-content').appendChild(repliesDiv);
+                        }
+                        repliesDiv.insertAdjacentHTML('beforeend', newCommentHtml);
+                    } else {
+                        // Если основной коммент — в начало списка
+                        if (noCommentsMsg) noCommentsMsg.remove();
+                        commentsList.insertAdjacentHTML('afterbegin', newCommentHtml);
+                    }
+
+                    // 4. Сбрасываем высоту textarea
+                    tx.style.height = '20px';
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    }
+</script>
+{% endblock %}

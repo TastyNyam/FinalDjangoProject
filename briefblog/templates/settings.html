@@ -1,0 +1,303 @@
+{% extends 'base.html' %}
+{% block title %}Настройки - BriefBlog{% endblock %}
+
+{% block extra_style %}
+<style>
+    .card {
+        background: white;
+        padding: 30px;
+        border-radius: 14px;
+        border: 1px solid #e5e5e5;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+        max-width: 600px;
+        margin: 0 auto;
+        animation: fadeInUp 0.5s ease-out forwards;
+    }
+
+    .back-link {
+        display: inline-block;
+        text-decoration: none;
+        color: #999;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: color 0.2s;
+        margin-bottom: 20px;
+    }
+    .back-link:hover { color: #111; }
+
+    h1 {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0 0 30px 0;
+        letter-spacing: -0.5px;
+    }
+
+    .field-group {
+        margin-bottom: 30px;
+    }
+
+    .field-name {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        color: #aaa;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+
+    /* Твои фирменные инпуты с линией снизу */
+    input[type="text"],
+    textarea {
+        width: 100%;
+        border: none;
+        border-bottom: 1px solid #ccc;
+        padding: 4px 0;
+        background: transparent;
+        font-family: inherit;
+        font-size: 16px;
+        outline: none;
+        transition: border-bottom 0.2s;
+        resize: none;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+        border-bottom: 2px solid #111;
+    }
+
+    /* Серая компактная кнопка выбора файла */
+    .file-label {
+        display: inline-block;
+        background: #ebebeb;
+        border-radius: 6px;
+        padding: 6px 16px;
+        color: #0f0f0f;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        border: 1px solid #dcdcdc;
+        transition: all 0.1s ease;
+    }
+    .file-label:hover { background: #dfdfdf; }
+
+    .helptext {
+        display: block;
+        font-size: 11px;
+        color: #999;
+        margin-top: 6px;
+    }
+
+    .btn-save {
+        background: #111;
+        color: white;
+        border: none;
+        padding: 12px 28px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        float: right;
+        margin-top: 10px;
+        transition: all 0.2s;
+    }
+    .btn-save:hover {
+        background: #333;
+        transform: translateY(-1px);
+    }
+
+    .avatar-preview-section {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-top: 10px;
+    }
+
+    .current-avatar {
+        width: 120px;  /* Было 64px */
+        height: 120px; /* Было 64px */
+        background: #f2f2f2;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 42px; /* Увеличил шрифт для первой буквы */
+        font-weight: 700;
+        border: 1px solid #eee;
+        overflow: hidden; /* Чтобы картинка не вылезала за кружок */
+        flex-shrink: 0;   /* Чтобы кружок не сжимался текстом рядом */
+    }
+
+    #bio-textarea {
+        overflow: hidden;
+    }
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <a href="{% url 'profile' user.username %}" class="back-link">← Отмена</a>
+
+    <h1>Настройки профиля</h1>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="field-group">
+            <span class="field-name">Фото профиля</span>
+            <div class="avatar-preview-section">
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                    <div class="current-avatar">
+                        {% if user.profile.avatar %}
+                            <img src="{{ user.profile.avatar.url }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                        {% else %}
+                            {{ user.username|slice:":1"|upper }}
+                        {% endif %}
+                    </div>
+
+                    {% if user.profile.avatar %}
+                    <button type="button" onclick="deleteAvatar(event)" style="background: none; border: none; color: #ff4d4d; font-size: 11px; cursor: pointer; font-weight: 600; padding: 0;">
+                        Удалить фото
+                    </button>
+                    {% endif %}
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 1px;">
+                    <label class="file-label" for="id_avatar" style="margin: 0;">Выбрать новое фото</label>
+                    <input type="file" name="avatar" id="id_avatar" style="display:none;" onchange="updateFileName(this)">
+                    <span class="helptext" id="file-name" style="margin-left: 5px;">JPG или PNG, до 2MB</span>
+
+                    <input type="hidden" name="delete_avatar" id="delete_avatar_input" value="false">
+                </div>
+            </div>
+        </div>
+
+        <div class="field-group">
+            <label>
+                <span class="field-name">Публичное имя</span>
+                <input type="text" name="display_name"
+                       value="{{ user.profile.display_name|default:user.username }}"
+                       placeholder="Как тебя будут называть?">
+            </label>
+            <span class="helptext">Это имя будет отображаться в твоих постах.</span>
+        </div>
+
+        <div class="field-group">
+            <label>
+                <span class="field-name">Системный логин</span>
+                <input type="text" name="username" value="{{ user.username }}"
+                       {% if not can_change_username %} readonly style="color: #aaa; border-bottom-color: #eee;" {% endif %}>
+            </label>
+            {% if not can_change_username %}
+                <span class="helptext" style="color: #e02424;">Доступно через {{ days_left }} дн.</span>
+            {% else %}
+                <span class="helptext">Это твой уникальный адрес. Можно менять раз в 14 дней.</span>
+            {% endif %}
+        </div>
+
+        <div class="field-group">
+            <label>
+                <span class="field-name">О себе</span>
+                <textarea name="bio" id="bio-textarea" placeholder="Расскажи что-нибудь о себе...">{{ user.profile.bio }}</textarea>
+            </label>
+            <span class="helptext">Пару слов о себе (например: "Я люблю пиццу").</span>
+        </div>
+
+        <button type="submit" class="btn-save">Сохранить изменения</button>
+        <div style="clear:both;"></div>
+    </form>
+</div>
+
+<div id="cropperModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; align-items:center; justify-content:center;">
+    <div style="background:white; padding:20px; border-radius:15px; max-width:90%; max-height:90%; display:flex; flex-direction:column;">
+        <div style="width: 100%; max-height: 70vh; overflow: hidden;">
+            <img id="cropperImage" src="" style="max-width: 100%;">
+        </div>
+        <div style="margin-top:20px; display:flex; justify-content:space-between;">
+            <button type="button" onclick="closeCropper()" style="background:#eee; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">Отмена</button>
+            <button type="button" id="saveCrop" style="background:#111; color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">Обрезать и применить</button>
+        </div>
+    </div>
+</div>
+
+<input type="hidden" name="cropped_avatar" id="id_cropped_avatar">
+{% endblock %}
+
+{% block extra_script %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script>
+    // Автовысота для био
+    const bioTx = document.getElementById('bio-textarea');
+    function autoResize() {
+        this.style.height = '0px';
+        this.style.height = (this.scrollHeight < 30 ? 30 : this.scrollHeight) + 'px';
+    }
+    if (bioTx) {
+        bioTx.addEventListener("input", autoResize);
+        autoResize.call(bioTx);
+    }
+
+    let cropper;
+    const image = document.getElementById('cropperImage');
+    const modal = document.getElementById('cropperModal');
+    const inputAvatar = document.getElementById('id_avatar');
+    const hiddenInput = document.getElementById('id_cropped_avatar');
+
+    function updateFileName(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                image.src = e.target.result;
+                modal.style.display = 'flex';
+
+                // Инициализация Cropper
+                if (cropper) cropper.destroy();
+                cropper = new Cropper(image, {
+                    aspectRatio: 1, // Квадрат для аватара
+                    viewMode: 1,    // Ограничить рамку размерами картинки
+                    autoCropArea: 1,
+                    dragMode: 'move', // Позволяет двигать картинку
+                });
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function closeCropper() {
+        modal.style.display = 'none';
+        inputAvatar.value = ""; // Сбросить выбор, если отменили
+    }
+
+    document.getElementById('saveCrop').addEventListener('click', function() {
+        const canvas = cropper.getCroppedCanvas({
+            width: 400,
+            height: 400
+        });
+
+        const croppedDataUrl = canvas.toDataURL('image/jpeg');
+
+        // Находим контейнер аватара
+        const avatarContainer = document.querySelector('.current-avatar');
+
+        // Очищаем всё внутри и вставляем картинку
+        avatarContainer.innerHTML = `<img src="${croppedDataUrl}" style="width:100%; height:100%; object-fit:cover;">`;
+
+        hiddenInput.value = croppedDataUrl;
+        modal.style.display = 'none';
+    });
+
+    function deleteAvatar(event) {
+        if (confirm("Удалить фото профиля?")) {
+            document.getElementById('delete_avatar_input').value = "true";
+            // Заменяем картинку на букву
+            const avatarDiv = document.querySelector('.current-avatar');
+            avatarDiv.innerHTML = "{{ user.username|slice:':1'|upper }}";
+            // Скрываем саму кнопку "Удалить"
+            event.target.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}

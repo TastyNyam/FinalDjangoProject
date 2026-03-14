@@ -1,0 +1,82 @@
+<footer class="main-footer">
+    <div class="footer-container">
+        <div class="footer-info">
+            <span class="copyright">© 2026 BriefBlog</span>
+            <span class="separator">•</span>
+            <span class="motto">Stay brief, stay bright</span>
+        </div>
+
+        <div class="footer-links">
+            <a href="{% url 'about' %}">About</a>
+            <a href="{% url 'privacy' %}">Privacy</a>
+            <a href="https://t.me/your_channel" target="_blank">Telegram</a>
+        </div>
+    </div>
+</footer>
+
+<style>
+    .main-footer {
+        margin-top: 60px; /* Чуть меньше отступ от постов */
+        padding: 20px 0;  /* В два раза меньше высота */
+        border-top: 1px solid #f0f0f0;
+        background: #fff;
+    }
+
+    .footer-container {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 0 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .footer-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #999;
+        font-size: 13px;
+    }
+
+    .copyright {
+        font-weight: 600;
+        color: #666; /* Не такой яркий, как основной текст */
+    }
+
+    .separator {
+        color: #ddd;
+    }
+
+    .motto {
+        font-weight: 400;
+    }
+
+    .footer-links {
+        display: flex;
+        gap: 15px;
+    }
+
+    .footer-links a {
+        text-decoration: none;
+        color: #999;
+        font-size: 13px;
+        font-weight: 500;
+        transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+        color: #111;
+    }
+
+    /* Адаптив: на мобилках просто центрируем всё */
+    @media (max-width: 480px) {
+        .footer-container {
+            flex-direction: column;
+            gap: 10px;
+            text-align: center;
+        }
+        .separator { display: none; } /* Прячем точку на мобилках */
+        .footer-info { flex-direction: column; gap: 2px; }
+    }
+</style>

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Конфиденциальность — BriefBlog{% endblock %}
+
+{% block extra_style %}
+<style>
+    .privacy-container {
+        max-width: 750px;
+        margin: 40px auto;
+    }
+    .privacy-card {
+        background: white;
+        padding: 50px;
+        border-radius: 20px;
+        border: 1px solid #eaeaea;
+        color: #333;
+    }
+    .privacy-card h1 {
+        font-size: 28px;
+        margin-bottom: 10px;
+        color: #111;
+        letter-spacing: -0.5px;
+    }
+    .update-date {
+        font-size: 13px;
+        color: #999;
+        margin-bottom: 40px;
+        display: block;
+    }
+    .privacy-card h2 {
+        font-size: 20px;
+        margin: 35px 0 15px;
+        color: #000;
+        font-weight: 700;
+    }
+    .privacy-card p, .privacy-card li {
+        font-size: 15px;
+        line-height: 1.8;
+        color: #4a4a4a;
+    }
+    .privacy-card ul {
+        padding-left: 20px;
+        margin: 15px 0;
+    }
+    .privacy-card li {
+        margin-bottom: 12px;
+    }
+    .highlight-text {
+        color: #000;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="privacy-container">
+    <div class="privacy-card">
+        <h1>Политика конфиденциальности</h1>
+        <span class="update-date">Последнее обновление: 14 марта 2026 г.</span>
+
+        <h2>1. Сбор информации</h2>
+        <p>Мы собираем минимальный набор данных, необходимый для вашего комфортного взаимодействия с платформой:</p>
+        <ul>
+            <li><span class="highlight-text">Данные профиля:</span> Имя пользователя и email для авторизации.</li>
+            <li><span class="highlight-text">Ваш контент:</span> Посты, изображения и комментарии, которые вы создаете.</li>
+            <li><span class="highlight-text">Логи:</span> Технические данные (IP-адрес) для защиты системы от спам-атак.</li>
+        </ul>
+
+        <h2>2. Использование данных</h2>
+        <p>Ваша информация используется только для обеспечения работы BriefBlog: отображения постов, уведомлений и персонализации настроек. Мы не используем ваши данные для таргетинга рекламы.</p>
+
+        <h2>3. Безопасность</h2>
+        <p>Пароли хранятся в зашифрованном виде (хеширование). Мы придерживаемся принципа «Privacy by Design» — ваши данные не передаются третьим лицам без вашего прямого запроса.</p>
+
+        <h2>4. Ваши права</h2>
+        <p>В BriefBlog вы полностью контролируете свой цифровой след. Вы можете отредактировать или удалить свой контент, а также полностью деактивировать аккаунт в настройках профиля.</p>
+    </div>
+</div>
+{% endblock %}

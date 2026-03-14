@@ -1,0 +1,73 @@
+{% for post in posts %}
+    <a href="{% url 'post_detail' pk=post.pk %}" class="post-card-link">
+        <article class="post-card"
+                 onclick="if(!event.target.closest('a')) location.href='{% url 'post_detail' post.pk %}'"
+                 style="cursor: pointer;">
+
+            <div class="post-header">
+                <a href="{% url 'profile' post.author.username %}" class="author-avatar-link">
+                    <div class="author-avatar">
+                        {% if post.author.profile.avatar %}
+                            {# Если у автора есть аватарка — показываем её #}
+                            <img src="{{ post.author.profile.avatar.url }}" alt="{{ post.author.username }}">
+                        {% else %}
+                            {# Если нет — оставляем твою красивую заглушку с буквой #}
+                            {{ post.author.username|slice:":1"|upper }}
+                        {% endif %}
+                    </div>
+                </a>
+
+                <div class="author-info">
+                    <a href="{% url 'profile' post.author.username %}" class="author-name" style="text-decoration: none;">
+                        {{ post.author.profile.display_name|default:post.author.username }}
+                    </a>
+                    <span class="post-date">@{{ post.author.username }} • {{ post.created_at|date:"d E Y" }}</span>
+                </div>
+            </div>
+
+            <div class="post-content-area">
+                {# Проверяем: если заголовок существует и он не пустой #}
+                {% if post.title %}
+                    <span class="post-title">{{ post.title }}</span>
+                {% endif %}
+
+                <div class="post-excerpt">{{ post.body|truncatechars:280 }}</div>
+            </div>
+
+            {% if post.cover %}
+                <div class="post-image-box">
+                    <img src="{{ post.cover.url }}" alt="{{ post.title }}">
+                </div>
+            {% endif %}
+
+            <div class="post-actions">
+                <div class="action-pill like-btn-list {% if post.is_liked %}active{% endif %}"
+                     data-url="{% url 'like_post' post.pk %}"
+                     style="cursor: pointer; transition: all 0.2s ease;">
+                    <span class="action-icon-svg">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/>
+                        </svg>
+                    </span>
+                    <span class="likes-count">{{ post.likes.count }}</span>
+                </div>
+
+                <div class="action-pill">
+                    <span class="action-icon-svg">
+                        <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/></svg>
+                    </span>
+                    <span>{{ post.comments.count }}</span>
+                </div>
+            </div>
+
+        </article>
+    </a>
+{% empty %}
+    <div class="no-posts" style="text-align: center; padding: 40px; color: #666;">
+        {% if request.GET.q %}
+            <p>По запросу «{{ query }}» ничего не найдено.</p>
+        {% else %}
+            <p>В сообществе пока нет записей.</p>
+        {% endif %}
+    </div>
+{% endfor %}

@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% block title %}Главная - BriefBlog{% endblock %}
+
+{% block extra_style %}
+<style>
+    .post-card-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+        margin-bottom: 16px;
+    }
+
+    .post-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e5e5e5;
+        padding: 5px 16px 16px 16px;
+        transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .post-card:hover {
+        background-color: #fdfdfd;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        border-color: #d0d0d0;
+    }
+
+    .post-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 12px;
+        margin-top: 0;
+    }
+
+    .author-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .author-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: #0f0f0f;
+        margin-bottom: 1px;
+    }
+
+    .post-date {
+        font-size: 12px;
+        color: #606060;
+    }
+
+    .post-content-area {
+        margin-bottom: 14px;
+    }
+
+    .post-title {
+        display: block;
+        font-weight: 700;
+        font-size: 18px;
+        margin-bottom: 6px;
+        color: #111;
+    }
+
+    .post-excerpt {
+        font-size: 15px;
+        line-height: 1.5;
+        color: #0f0f0f;
+        word-wrap: break-word;
+    }
+
+    .post-image-box {
+        width: 100%;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #eee;
+        margin-top: 12px;
+    }
+
+    .post-image-box img {
+        width: 100%;
+        max-height: 500px;
+        object-fit: cover;
+        display: block;
+    }
+
+    /* --- НОВЫЕ СТИЛИ ИКОНОК --- */
+    .post-actions {
+        display: flex;
+        align-items: center;
+        margin-top: 14px;
+        gap: 8px; /* Расстояние между кнопками */
+    }
+
+    /* Капсульный стиль для кнопок */
+    .action-pill {
+        display: flex;
+        align-items: center;
+        background: #f2f2f2;
+        border-radius: 20px;
+        padding: 6px 14px;
+        color: #0f0f0f;
+        font-size: 13px;
+        font-weight: 500;
+        transition: background 0.2s;
+    }
+
+    .action-pill:hover {
+        background: #e5e5e5;
+    }
+
+    .action-icon-svg {
+        width: 18px;
+        height: 18px;
+        margin-right: 6px;
+        fill: currentColor; /* Иконка красится в цвет текста автоматически */
+        display: flex;
+        align-items: center;
+    }
+
+    .no-posts {
+        text-align: center;
+        padding: 50px;
+        color: #888;
+        font-size: 18px;
+    }
+
+    /* Применяем к карточкам */
+    .post-card {
+        animation: fadeInUp 0.6s ease forwards;
+        opacity: 0; /* Чтобы они не моргали до начала анимации */
+    }
+
+    /* Очередность появления (каскад) */
+    .post-card:nth-child(1) { animation-delay: 0.1s; }
+    .post-card:nth-child(2) { animation-delay: 0.2s; }
+    .post-card:nth-child(3) { animation-delay: 0.3s; }
+    .post-card:nth-child(4) { animation-delay: 0.4s; }
+
+    /* Примерная структура */
+    .main-wrapper {
+        display: grid;
+        grid-template-columns: 250px 1fr 250px; /* Боковушки по 250px */
+        gap: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .author-avatar {
+        width: 36px;
+        height: 36px;
+        background: #111;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        font-weight: 700;
+        margin-right: 12px;
+        overflow: hidden; /* Важно: обрезает картинку по кругу */
+    }
+
+    .author-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* Картинка заполнит круг без искажений */
+    }
+
+    .author-avatar-link {
+        text-decoration: none;
+    }
+
+    .action-pill.active {
+        background: #0f0f0f;
+        color: #fff;
+    }
+
+    .action-pill.active .action-icon-svg {
+        fill: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div id="posts-container">
+         {% include 'includes/post_list_loop.html' %}
+    </div>
+{% endblock %}
+
+{% block extra_script %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Обработчик для всех кнопок лайка в списке постов
+        const likeButtons = document.querySelectorAll('.like-btn-list');
+
+        likeButtons.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();   // предотвращаем дефолтное действие
+                e.stopPropagation();  // Останавливаем всплытие — не идём по ссылке
+                const url = this.dataset.url;
+                const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                const likesCountSpan = this.querySelector('.likes-count');
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.likes_count !== undefined) {
+                        likesCountSpan.innerText = data.likes_count;
+
+                        // Визуально активируем/деактивируем кнопку
+                        if (data.liked) {
+                            this.classList.add('active');
+                        } else {
+                            this.classList.remove('active');
+                        }
+                    }
+                })
+                .catch(err => console.error('Ошибка лайка:', err));
+            });
+        });
+    });
+</script>
+{% endblock %}

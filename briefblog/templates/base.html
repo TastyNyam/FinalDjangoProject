@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BriefBlog{% endblock %}</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Roboto", "Segoe UI", Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #0f0f0f;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f7f9fc;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #111;
+            border-radius: 10px;
+            border: 2px solid #f7f9fc;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #333;
+        }
+
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #111 #f7f9fc;
+            box-sizing: border-box;
+        }
+
+        main {
+            flex: 1;
+            max-width: 640px;
+            margin: 30px auto;
+            padding: 0 15px;
+            width: 100%;
+        }
+
+        .author-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #111, #444);
+            color: white !important;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            flex-shrink: 0;
+            text-decoration: none;
+            margin-right: 12px;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+
+    {% block extra_style %}{% endblock %}
+</head>
+<body>
+
+    {% include 'header.html' %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    {% include 'footer.html' %}
+
+    {% block extra_script %}{% endblock %}
+
+</body>
+</html>
