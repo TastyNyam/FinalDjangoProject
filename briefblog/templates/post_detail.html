@@ -887,12 +887,15 @@
                         ? `<img src="${data.avatar_url}" class="avatar-img">`
                         : data.author.charAt(0).toUpperCase();
 
+                    const avatarWithLink = `<a href="/briefblog/profile/${data.author}/" class="author-avatar-link"><div class="comment-avatar">${avatarContent}</div></a>`;
+                                            : data.author.charAt(0).toUpperCase();
+
                     // Формируем строку автора (с учетом того, ответил он кому-то или нет)
                     const replyHeader = data.reply_to
-                        ? `<a href="/profile/${data.author}/" style="font-size: 13px; font-weight: 700; color: #0f0f0f; text-decoration: none;">@${data.author}</a>
+                        ? `<a href="/briefblog/profile/${data.author}/" style="font-size: 13px; font-weight: 700; color: #0f0f0f; text-decoration: none;">@${data.author}</a>
                            <span style="color: #999; font-weight: 400;"> ответил </span>
-                           <a href="/profile/${data.reply_to}/" style="font-size: 13px; font-weight: 700; color: #0f0f0f; text-decoration: none;">@${data.reply_to}</a>`
-                        : `<a href="/profile/${data.author}/" style="font-size: 13px; font-weight: 700; color: #0f0f0f; text-decoration: none;">@${data.author}</a>`;
+                           <a href="/briefblog/profile/${data.reply_to}/" style="font-size: 13px; font-weight: 700; color: #0f0f0f; text-decoration: none;">@${data.reply_to}</a>`
+                        : `<a href="/briefblog/profile/${data.author}/" style="font-size: 13px; font-weight: 700; color: #0f0f0f; text-decoration: none;">@${data.author}</a>`;
 
                     const newCommentHtml = `
                         <div class="comment" id="comment-${data.comment_id}" style="animation: fadeInUp 0.5s ease-out forwards;">
@@ -911,11 +914,11 @@
                                         ОТВЕТИТЬ
                                     </button>
 
-                                    <a href="/comment/${data.comment_id}/delete/" class="control-link delete-link"
+                                    <a href="/briefblog/comment/${data.comment_id}/delete/" class="control-link delete-link"
                                        style="text-decoration:none; font-size:11px; color:#999;"
                                        onclick="return confirm('Удалить этот комментарий?')">УДАЛИТЬ</a>
 
-                                    <a href="/comment/${data.comment_id}/edit/" class="control-link"
+                                    <a href="/briefblog/comment/${data.comment_id}/edit/" class="control-link"
                                        style="text-decoration:none; font-size:11px; color:#999;">ИЗМЕНИТЬ</a>
                                 </div>
                             </div>
